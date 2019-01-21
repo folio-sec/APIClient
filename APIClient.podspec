@@ -8,4 +8,5 @@ Pod::Spec.new do |s|
   s.homepage = 'https://github.com/folio-sec/APIClient'
   s.summary = 'Folio API Client'
   s.source_files = 'APIClient/*.swift'
+  s.swift_version = '4.2'
 end
