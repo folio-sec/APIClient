@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.source = { git: 'git@github.com:folio-sec/APIClient.git', tag: 'v0.1.0' }
   s.authors = 'Kishikawa Katsumi'
   s.license = 'Proprietary'
-  spec.homepage = 'https://github.com/folio-sec/APIClient'
+  s.homepage = 'https://github.com/folio-sec/APIClient'
   s.summary = 'Folio API Client'
   s.source_files = 'APIClient/*.swift'
 end
