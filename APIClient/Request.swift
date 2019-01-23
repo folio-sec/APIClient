@@ -10,32 +10,32 @@ public struct Request<ResponseBody> {
         self.method = method
         self.parameters = parameters
     }
-}
 
-public enum Parameters {
-    case form([String: String?])
-    case json(AnyEncodable)
+    public enum Parameters {
+        case form([String: String?])
+        case json(AnyEncodable)
 
-    public init(_ raw: [String: String?]) {
-        self = .form(raw)
-    }
-
-    public init<T>(_ raw: T) where T: Encodable {
-        self = .json(AnyEncodable(raw))
-    }
-}
-
-public struct AnyEncodable: Encodable {
-    var _encodeFunc: (Encoder) throws -> Void
-
-    init(_ encodable: Encodable) {
-        func _encode(to encoder: Encoder) throws {
-            try encodable.encode(to: encoder)
+        public init(_ raw: [String: String?]) {
+            self = .form(raw)
         }
-        self._encodeFunc = _encode
+
+        public init<T>(_ raw: T) where T: Encodable {
+            self = .json(AnyEncodable(raw))
+        }
     }
 
-    public func encode(to encoder: Encoder) throws {
-        try _encodeFunc(encoder)
+    public struct AnyEncodable: Encodable {
+        var encode: (Encoder) throws -> Void
+
+        init(_ encodable: Encodable) {
+            func encode(to encoder: Encoder) throws {
+                try encodable.encode(to: encoder)
+            }
+            self.encode = encode
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            try encode(encoder)
+        }
     }
 }

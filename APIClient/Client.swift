@@ -30,7 +30,12 @@ public class Client {
             switch parameters {
             case .form(let raw):
                 var components = URLComponents()
-                components.queryItems = raw.map { URLQueryItem(name: $0.key, value: $0.value) }
+                components.queryItems = raw.compactMap {
+                    if let value = $0.value {
+                        return URLQueryItem(name: $0.key, value: value)
+                    }
+                    return nil
+                }
 
                 if let query = components.query {
                     urlRequest.addValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
