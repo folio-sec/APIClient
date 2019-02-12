@@ -12,30 +12,27 @@ public struct Request<ResponseBody> {
     }
 
     public enum Parameters {
+        case query([String: Any?])
         case form([String: String?])
-        case json(AnyEncodable)
+        case json(Data?)
+
+        public init(_ raw: [String: Any?]) {
+            self = .query(raw)
+        }
 
         public init(_ raw: [String: String?]) {
             self = .form(raw)
         }
 
         public init<T>(_ raw: T) where T: Encodable {
-            self = .json(AnyEncodable(raw))
-        }
-    }
-
-    public struct AnyEncodable: Encodable {
-        var encode: (Encoder) throws -> Void
-
-        init(_ encodable: Encodable) {
-            func encode(to encoder: Encoder) throws {
-                try encodable.encode(to: encoder)
+            let encoder = JSONEncoder()
+            encoder.dataEncodingStrategy = .base64
+            encoder.dateEncodingStrategy = .iso8601
+            if let data = try? encoder.encode(raw) {
+                self = .json(data)
+            } else {
+                self = .json(nil)
             }
-            self.encode = encode
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            try encode(encoder)
         }
     }
 }

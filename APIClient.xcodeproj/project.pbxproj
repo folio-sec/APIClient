@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		14847E602212054200478D45 /* Authenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14847E5F2212054200478D45 /* Authenticator.swift */; };
 		14DDC19F21F4B5DD006E01E8 /* APIClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14DDC19521F4B5DD006E01E8 /* APIClient.framework */; };
 		14DDC1A421F4B5DD006E01E8 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DDC1A321F4B5DD006E01E8 /* APIClientTests.swift */; };
 		14DDC1A621F4B5DD006E01E8 /* APIClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 14DDC19821F4B5DD006E01E8 /* APIClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -28,6 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		14847E5F2212054200478D45 /* Authenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Authenticator.swift; sourceTree = "<group>"; };
 		14DDC19521F4B5DD006E01E8 /* APIClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = APIClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		14DDC19821F4B5DD006E01E8 /* APIClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = APIClient.h; sourceTree = "<group>"; };
 		14DDC19921F4B5DD006E01E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -84,6 +86,7 @@
 				14DDC19821F4B5DD006E01E8 /* APIClient.h */,
 				14DDC1AF21F4B711006E01E8 /* Client.swift */,
 				14DDC1B121F4B735006E01E8 /* Interceptor.swift */,
+				14847E5F2212054200478D45 /* Authenticator.swift */,
 				14DDC1B321F4B769006E01E8 /* Request.swift */,
 				14DDC1B521F4B795006E01E8 /* Response.swift */,
 				14DDC1B721F4B7B3006E01E8 /* Result.swift */,
@@ -215,6 +218,7 @@
 				14DDC1B021F4B711006E01E8 /* Client.swift in Sources */,
 				14DDC1B421F4B769006E01E8 /* Request.swift in Sources */,
 				14DDC1B221F4B735006E01E8 /* Interceptor.swift in Sources */,
+				14847E602212054200478D45 /* Authenticator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
