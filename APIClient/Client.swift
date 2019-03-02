@@ -217,7 +217,6 @@ public class Client {
         client.interceptors = interceptors
         authenticator.authenticate(client: client, request: request, response: response, data: data) {
             completion($0)
-            print(client)
         }
     }
 }
