@@ -4,6 +4,9 @@ public class Client {
     public let baseURL: URL
     public let headers: [AnyHashable: Any]
 
+    public var dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .iso8601
+    public var dataDecodingStrategy: JSONDecoder.DataDecodingStrategy = .base64
+
     public var authenticator: Authenticating = Authenticator()
     public var interceptors = [Intercepting]()
 
@@ -151,6 +154,8 @@ public class Client {
                 break
             case 200...299: // Success
                 let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = dateDecodingStrategy
+                decoder.dataDecodingStrategy = dataDecodingStrategy
                 do {
                     let responseBody = try decoder.decode(ResponseBody.self, from: data)
                     completion(.success(Response(statusCode: statusCode, headers: response.allHeaderFields, body: responseBody)))
