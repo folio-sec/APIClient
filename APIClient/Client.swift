@@ -67,7 +67,7 @@ public class Client {
 
     private func handleResponse(request: URLRequest, response: URLResponse?, data: Data?, error: Error?, completion: @escaping (Result<Response<Void>, Failure>) -> Void) {
         if let error = error {
-            completion(.failure(.cause(error)))
+            completion(.failure(.networkError(error)))
             return
         }
         if let response = response as? HTTPURLResponse, let data = data {
@@ -93,7 +93,7 @@ public class Client {
                         case .failure(let error):
                             completion(.failure(error))
                         case .cancel:
-                            completion(.failure(Failure.responseError(statusCode, response.allHeaderFields, data)))
+                            completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
                         }
 
                         self.isRetrying = false
@@ -105,7 +105,7 @@ public class Client {
                     pendingRequests.append(pendingRequest)
                 }
             case 500...599: // Server Error
-                completion(.failure(Failure.responseError(statusCode, response.allHeaderFields, data)))
+                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
             default:
                 break
             }
@@ -144,7 +144,7 @@ public class Client {
 
     private func handleResponse<ResponseBody>(request: URLRequest, response: URLResponse?, data: Data?, error: Error?, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) where ResponseBody: Decodable {
         if let error = error {
-            completion(.failure(.cause(error)))
+            completion(.failure(.networkError(error)))
             return
         }
         if let response = response as? HTTPURLResponse, let data = data {
@@ -159,8 +159,8 @@ public class Client {
                 do {
                     let responseBody = try decoder.decode(ResponseBody.self, from: data)
                     completion(.success(Response(statusCode: statusCode, headers: response.allHeaderFields, body: responseBody)))
-                } catch (let decodingError) {
-                    completion(.failure(.cause(decodingError)))
+                } catch {
+                    completion(.failure(.decodingError(error, statusCode, response.allHeaderFields, data)))
                 }
             case 300...399: // Redirection
                 break
@@ -178,7 +178,7 @@ public class Client {
                         case .failure(let error):
                             completion(.failure(error))
                         case .cancel:
-                            completion(.failure(Failure.responseError(statusCode, response.allHeaderFields, data)))
+                            completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
                         }
 
                         self.isRetrying = false
@@ -190,7 +190,7 @@ public class Client {
                     pendingRequests.append(pendingRequest)
                 }
             case 500...599: // Server Error
-                completion(.failure(Failure.responseError(statusCode, response.allHeaderFields, data)))
+                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
             default:
                 break
             }

@@ -13,6 +13,7 @@ public struct Response<ResponseBody> {
 }
 
 public enum Failure: Error {
-    case cause(Error)
+    case networkError(Error)
+    case decodingError(Error, Int, [AnyHashable: Any], Data)
     case responseError(Int, [AnyHashable: Any], Data)
 }
