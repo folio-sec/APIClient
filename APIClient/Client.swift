@@ -7,7 +7,7 @@ public class Client {
     public var dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .iso8601
     public var dataDecodingStrategy: JSONDecoder.DataDecodingStrategy = .base64
 
-    public var authenticator: Authenticating = Authenticator()
+    public var authenticator: Authenticating?
     public var interceptors = [Intercepting]()
 
     private let session: URLSession
@@ -82,33 +82,41 @@ public class Client {
             case 300...399: // Redirection
                 break
             case 400...499: // Client Error
-                if !isRetrying {
-                    isRetrying = true
+                if let authenticator = self.authenticator {
+                    if !isRetrying {
+                        isRetrying = true
 
-                    self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] (result) in
-                        guard let self = self else { return }
-
-                        self.queue.async { [weak self] in
+                        self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] (result) in
                             guard let self = self else { return }
 
-                            switch result {
-                            case .success(let request):
-                                self.perform(request: request, completion: completion)
-                                self.performPendingRequests()
-                            case .failure(let error):
-                                completion(.failure(error))
-                            case .cancel:
-                                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
-                            }
+                            self.queue.async { [weak self] in
+                                guard let self = self else { return }
 
-                            self.isRetrying = false
+                                switch result {
+                                case .success(let request):
+                                    self.perform(request: request, completion: completion)
+                                    self.retryPendingRequests()
+                                case .failure(let error):
+                                    completion(.failure(error))
+                                    self.failPendingRequests(error)
+                                case .cancel:
+                                    let error = Failure.responseError(statusCode, response.allHeaderFields, data)
+                                    completion(.failure(error))
+                                    self.cancelPendingRequests(error)
+                                }
+
+                                self.isRetrying = false
+                            }
                         }
+                    } else {
+                        let pendingRequest = PendingRequest(request: request,
+                                                            retry: { self.perform(request: request, completion: completion) },
+                                                            fail: { completion(.failure($0)) },
+                                                            cancel: { _ in completion(.failure(.responseError(statusCode, response.allHeaderFields, data))) })
+                        pendingRequests.append(pendingRequest)
                     }
                 } else {
-                    let pendingRequest = PendingRequest {
-                        self.perform(request: request, completion: completion)
-                    }
-                    pendingRequests.append(pendingRequest)
+                    completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
                 }
             case 500...599: // Server Error
                 completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
@@ -173,33 +181,41 @@ public class Client {
             case 300...399: // Redirection
                 break
             case 400...499: // Client Error
-                if !isRetrying {
-                    isRetrying = true
+                if let authenticator = self.authenticator {
+                    if !isRetrying {
+                        isRetrying = true
 
-                    self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] (result) in
-                        guard let self = self else { return }
-
-                        self.queue.async { [weak self] in
+                        self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] (result) in
                             guard let self = self else { return }
 
-                            switch result {
-                            case .success(let request):
-                                self.perform(request: request, completion: completion)
-                                self.performPendingRequests()
-                            case .failure(let error):
-                                completion(.failure(error))
-                            case .cancel:
-                                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
-                            }
+                            self.queue.async { [weak self] in
+                                guard let self = self else { return }
 
-                            self.isRetrying = false
+                                switch result {
+                                case .success(let request):
+                                    self.perform(request: request, completion: completion)
+                                    self.retryPendingRequests()
+                                case .failure(let error):
+                                    completion(.failure(error))
+                                    self.failPendingRequests(error)
+                                case .cancel:
+                                    let error = Failure.responseError(statusCode, response.allHeaderFields, data)
+                                    completion(.failure(error))
+                                    self.cancelPendingRequests(error)
+                                }
+
+                                self.isRetrying = false
+                            }
                         }
+                    } else {
+                        let pendingRequest = PendingRequest(request: request,
+                                                            retry: { self.perform(request: request, completion: completion) },
+                                                            fail: { completion(.failure($0)) },
+                                                            cancel: { _ in completion(.failure(.responseError(statusCode, response.allHeaderFields, data))) })
+                        pendingRequests.append(pendingRequest)
                     }
                 } else {
-                    let pendingRequest = PendingRequest {
-                        self.perform(request: request, completion: completion)
-                    }
-                    pendingRequests.append(pendingRequest)
+                    completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
                 }
             case 500...599: // Server Error
                 completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
@@ -209,10 +225,25 @@ public class Client {
         }
     }
 
-    private func performPendingRequests() {
+    private func retryPendingRequests() {
         for request in pendingRequests {
-            request.closure()
+            request.retry()
         }
+        pendingRequests.removeAll()
+    }
+
+    private func failPendingRequests(_ error: Failure) {
+        for request in pendingRequests {
+            request.fail(error)
+        }
+        pendingRequests.removeAll()
+    }
+
+    private func cancelPendingRequests(_ error: Failure) {
+        for request in pendingRequests {
+            request.cancel(error)
+        }
+        pendingRequests.removeAll()
     }
 
     private func interceptRequest(interceptors: [Intercepting], request: URLRequest, completion: @escaping (URLRequest) -> Void) {
@@ -234,14 +265,11 @@ public class Client {
     }
 }
 
-private struct Authenticator: Authenticating {
-    func authenticate(client: Client, request: URLRequest, response: HTTPURLResponse, data: Data?, completion: @escaping (AuthenticationResult) -> Void) {
-        completion(.cancel)
-    }
-}
-
 private struct PendingRequest {
-    let closure: () -> Void
+    let request: URLRequest
+    let retry: () -> Void
+    let fail: (Failure) -> Void
+    let cancel: (Failure) -> Void
 }
 
 private class TaskExecutor {
