@@ -85,20 +85,24 @@ public class Client {
                 if !isRetrying {
                     isRetrying = true
 
-                    self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] in
+                    self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] (result) in
                         guard let self = self else { return }
 
-                        switch $0 {
-                        case .success(let request):
-                            self.perform(request: request, completion: completion)
-                            self.performPendingRequests()
-                        case .failure(let error):
-                            completion(.failure(error))
-                        case .cancel:
-                            completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
-                        }
+                        self.queue.async { [weak self] in
+                            guard let self = self else { return }
 
-                        self.isRetrying = false
+                            switch result {
+                            case .success(let request):
+                                self.perform(request: request, completion: completion)
+                                self.performPendingRequests()
+                            case .failure(let error):
+                                completion(.failure(error))
+                            case .cancel:
+                                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
+                            }
+
+                            self.isRetrying = false
+                        }
                     }
                 } else {
                     let pendingRequest = PendingRequest {
@@ -172,20 +176,24 @@ public class Client {
                 if !isRetrying {
                     isRetrying = true
 
-                    self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] in
+                    self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] (result) in
                         guard let self = self else { return }
 
-                        switch $0 {
-                        case .success(let request):
-                            self.perform(request: request, completion: completion)
-                            self.performPendingRequests()
-                        case .failure(let error):
-                            completion(.failure(error))
-                        case .cancel:
-                            completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
-                        }
+                        self.queue.async { [weak self] in
+                            guard let self = self else { return }
 
-                        self.isRetrying = false
+                            switch result {
+                            case .success(let request):
+                                self.perform(request: request, completion: completion)
+                                self.performPendingRequests()
+                            case .failure(let error):
+                                completion(.failure(error))
+                            case .cancel:
+                                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
+                            }
+
+                            self.isRetrying = false
+                        }
                     }
                 } else {
                     let pendingRequest = PendingRequest {
