@@ -49,18 +49,20 @@ public class Client {
             let task = self.session.dataTask(with: request) { [weak self] (data, response, error) in
                 guard let self = self else { return }
 
-                self.interceptResponse(interceptors: self.interceptors, request: request, response: response, data: data, error: error) { [weak self] (response, data, error) in
+                self.queue.async { [weak self] in
                     guard let self = self else { return }
 
-                    self.queue.async { [weak self] in
+                    self.interceptResponse(interceptors: self.interceptors, request: request, response: response, data: data, error: error) { [weak self] (response, data, error) in
                         guard let self = self else { return }
-                        self.handleResponse(request: request, response: response, data: data, error: error, completion: completion)
+
+                        self.queue.async { [weak self] in
+                            guard let self = self else { return }
+                            self.handleResponse(request: request, response: response, data: data, error: error, completion: completion)
+                        }
                     }
+                    self.taskExecutor.startPendingTasks()
                 }
-
-                self.taskExecutor.startPendingTasks()
             }
-
             self.taskExecutor.push(Task(sessionTask: task))
         }
     }
@@ -126,18 +128,20 @@ public class Client {
             let task = self.session.dataTask(with: request) { [weak self] (data, response, error) in
                 guard let self = self else { return }
 
-                self.interceptResponse(interceptors: self.interceptors, request: request, response: response, data: data, error: error) { [weak self] (response, data, error) in
+                self.queue.async { [weak self] in
                     guard let self = self else { return }
 
-                    self.queue.async { [weak self] in
+                    self.interceptResponse(interceptors: self.interceptors, request: request, response: response, data: data, error: error) { [weak self] (response, data, error) in
                         guard let self = self else { return }
-                        self.handleResponse(request: request, response: response, data: data, error: error, completion: completion)
+
+                        self.queue.async { [weak self] in
+                            guard let self = self else { return }
+                            self.handleResponse(request: request, response: response, data: data, error: error, completion: completion)
+                        }
                     }
+                    self.taskExecutor.startPendingTasks()
                 }
-
-                self.taskExecutor.startPendingTasks()
             }
-
             self.taskExecutor.push(Task(sessionTask: task))
         }
     }
