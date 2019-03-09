@@ -35,14 +35,14 @@ public class Client {
         taskExecutor.cancelAll()
     }
 
-    public func perform(request: Request<Void>, completion: @escaping (Result<Response<Void>, Failure>) -> Void) {
+    public func perform<ResponseBody>(request: Request<ResponseBody>, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) {
         queue.async { [weak self] in
             guard let self = self else { return }
             self.perform(request: request.makeURLRequest(baseURL: self.baseURL), completion: completion)
         }
     }
 
-    private func perform(request: URLRequest, completion: @escaping (Result<Response<Void>, Failure>) -> Void) {
+    private func perform<ResponseBody>(request: URLRequest, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) {
         interceptRequest(interceptors: self.interceptors, request: request) { [weak self] (request) in
             guard let self = self else { return }
 
@@ -67,7 +67,7 @@ public class Client {
         }
     }
 
-    private func handleResponse(request: URLRequest, response: URLResponse?, data: Data?, error: Error?, completion: @escaping (Result<Response<Void>, Failure>) -> Void) {
+    private func handleResponse<ResponseBody>(request: URLRequest, response: URLResponse?, data: Data?, error: Error?, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) {
         if let error = error {
             completion(.failure(.networkError(error)))
             return
@@ -78,7 +78,7 @@ public class Client {
             case 100...199: // Informational
                 break
             case 200...299: // Success
-                completion(.success(Response(statusCode: statusCode, headers: response.allHeaderFields, body: ())))
+                handleDecodableResponse(response: response, data: data, completion: completion)
             case 300...399: // Redirection
                 break
             case 400...499: // Client Error
@@ -126,103 +126,24 @@ public class Client {
         }
     }
 
-    public func perform<ResponseBody>(request: Request<ResponseBody>, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) where ResponseBody: Decodable {
-        queue.async { [weak self] in
-            guard let self = self else { return }
-            self.perform(request: request.makeURLRequest(baseURL: self.baseURL), completion: completion)
+    private func handleDecodableResponse(response: HTTPURLResponse, data: Data, completion: @escaping (Result<Response<Void>, Failure>) -> Void) {
+        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: ())))
+    }
+
+    private func handleDecodableResponse<ResponseBody>(response: HTTPURLResponse, data: Data, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) where ResponseBody: Decodable {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = dateDecodingStrategy
+        decoder.dataDecodingStrategy = dataDecodingStrategy
+        do {
+            let responseBody = try decoder.decode(ResponseBody.self, from: data)
+            completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: responseBody)))
+        } catch {
+            completion(.failure(.decodingError(error, response.statusCode, response.allHeaderFields, data)))
         }
     }
 
-    private func perform<ResponseBody>(request: URLRequest, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) where ResponseBody: Decodable {
-        interceptRequest(interceptors: self.interceptors, request: request) { [weak self] (request) in
-            guard let self = self else { return }
-
-            let task = self.session.dataTask(with: request) { [weak self] (data, response, error) in
-                guard let self = self else { return }
-
-                self.queue.async { [weak self] in
-                    guard let self = self else { return }
-
-                    self.interceptResponse(interceptors: self.interceptors, request: request, response: response, data: data, error: error) { [weak self] (response, data, error) in
-                        guard let self = self else { return }
-
-                        self.queue.async { [weak self] in
-                            guard let self = self else { return }
-                            self.handleResponse(request: request, response: response, data: data, error: error, completion: completion)
-                        }
-                    }
-                    self.taskExecutor.startPendingTasks()
-                }
-            }
-            self.taskExecutor.push(Task(sessionTask: task))
-        }
-    }
-
-    private func handleResponse<ResponseBody>(request: URLRequest, response: URLResponse?, data: Data?, error: Error?, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) where ResponseBody: Decodable {
-        if let error = error {
-            completion(.failure(.networkError(error)))
-            return
-        }
-        if let response = response as? HTTPURLResponse, let data = data {
-            let statusCode = response.statusCode
-            switch statusCode {
-            case 100...199: // Informational
-                break
-            case 200...299: // Success
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = dateDecodingStrategy
-                decoder.dataDecodingStrategy = dataDecodingStrategy
-                do {
-                    let responseBody = try decoder.decode(ResponseBody.self, from: data)
-                    completion(.success(Response(statusCode: statusCode, headers: response.allHeaderFields, body: responseBody)))
-                } catch {
-                    completion(.failure(.decodingError(error, statusCode, response.allHeaderFields, data)))
-                }
-            case 300...399: // Redirection
-                break
-            case 400...499: // Client Error
-                if let authenticator = self.authenticator {
-                    if !isRetrying {
-                        isRetrying = true
-
-                        self.authenticate(authenticator: authenticator, request: request, response: response, data: data) { [weak self] (result) in
-                            guard let self = self else { return }
-
-                            self.queue.async { [weak self] in
-                                guard let self = self else { return }
-
-                                switch result {
-                                case .success(let request):
-                                    self.perform(request: request, completion: completion)
-                                    self.retryPendingRequests()
-                                case .failure(let error):
-                                    completion(.failure(error))
-                                    self.failPendingRequests(error)
-                                case .cancel:
-                                    let error = Failure.responseError(statusCode, response.allHeaderFields, data)
-                                    completion(.failure(error))
-                                    self.cancelPendingRequests(error)
-                                }
-
-                                self.isRetrying = false
-                            }
-                        }
-                    } else {
-                        let pendingRequest = PendingRequest(request: request,
-                                                            retry: { self.perform(request: request, completion: completion) },
-                                                            fail: { completion(.failure($0)) },
-                                                            cancel: { _ in completion(.failure(.responseError(statusCode, response.allHeaderFields, data))) })
-                        pendingRequests.append(pendingRequest)
-                    }
-                } else {
-                    completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
-                }
-            case 500...599: // Server Error
-                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
-            default:
-                break
-            }
-        }
+    private func handleDecodableResponse<ResponseBody>(response: HTTPURLResponse, data: Data, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) {
+        fatalError("unexpected response type")
     }
 
     private func retryPendingRequests() {
