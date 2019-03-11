@@ -24,7 +24,7 @@ public struct Request<ResponseBody> {
             self = .form(raw)
         }
 
-        public init<T>(_ raw: T) where T: Encodable {
+        public init<T: Encodable>(_ raw: T) {
             let encoder = JSONEncoder()
             encoder.dataEncodingStrategy = .base64
             encoder.dateEncodingStrategy = .iso8601

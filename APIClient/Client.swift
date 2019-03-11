@@ -86,7 +86,19 @@ public class Client {
             case 100...199: // Informational
                 break
             case 200...299: // Success
-                handleDecodableResponse(response: response, data: data, completion: completion)
+                switch ResponseBody.self {
+                case let decodableType as Decodable.Type:
+                    do {
+                        let responseBody = try decodableType.init(decoder: decoder, data: data) as! ResponseBody
+                        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: responseBody)))
+                    } catch {
+                        completion(.failure(.decodingError(error, response.statusCode, response.allHeaderFields, data)))
+                    }
+                case is Void.Type:
+                    completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: () as! ResponseBody)))
+                default:
+                    fatalError("unexpected response type: \(ResponseBody.self)")
+                }
             case 300...399: // Redirection
                 break
             case 400...499: // Client Error
@@ -132,23 +144,6 @@ public class Client {
                 break
             }
         }
-    }
-
-    private func handleDecodableResponse(response: HTTPURLResponse, data: Data, completion: @escaping (Result<Response<Void>, Failure>) -> Void) {
-        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: ())))
-    }
-
-    private func handleDecodableResponse<ResponseBody>(response: HTTPURLResponse, data: Data, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) where ResponseBody: Decodable {
-        do {
-            let responseBody = try decoder.decode(ResponseBody.self, from: data)
-            completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: responseBody)))
-        } catch {
-            completion(.failure(.decodingError(error, response.statusCode, response.allHeaderFields, data)))
-        }
-    }
-
-    private func handleDecodableResponse<ResponseBody>(response: HTTPURLResponse, data: Data, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) {
-        fatalError("unexpected response type")
     }
 
     private func retryPendingRequests() {
@@ -256,5 +251,11 @@ private class Task: Hashable {
 
     static func == (lhs: Task, rhs: Task) -> Bool {
         return lhs.taskIdentifier == rhs.taskIdentifier
+    }
+}
+
+private extension Decodable {
+    init(decoder: JSONDecoder, data: Data) throws {
+        self = try decoder.decode(Self.self, from: data)
     }
 }
