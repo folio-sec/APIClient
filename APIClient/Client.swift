@@ -76,8 +76,12 @@ public class Client {
     }
 
     private func handleResponse<ResponseBody>(request: URLRequest, response: URLResponse?, data: Data?, error: Error?, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) {
+        let q = configuration.queue
+
         if let error = error {
-            completion(.failure(.networkError(error)))
+            q.async {
+                completion(.failure(.networkError(error)))
+            }
             return
         }
         if let response = response as? HTTPURLResponse, let data = data {
@@ -90,12 +94,18 @@ public class Client {
                 case let decodableType as Decodable.Type:
                     do {
                         let responseBody = try decodableType.init(decoder: decoder, data: data) as! ResponseBody
-                        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: responseBody)))
+                        q.async {
+                            completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: responseBody)))
+                        }
                     } catch {
-                        completion(.failure(.decodingError(error, response.statusCode, response.allHeaderFields, data)))
+                        q.async {
+                            completion(.failure(.decodingError(error, response.statusCode, response.allHeaderFields, data)))
+                        }
                     }
                 case is Void.Type:
-                    completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: () as! ResponseBody)))
+                    q.async {
+                        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: () as! ResponseBody)))
+                    }
                 default:
                     fatalError("unexpected response type: \(ResponseBody.self)")
                 }
@@ -117,11 +127,15 @@ public class Client {
                                     self.perform(request: request, completion: completion)
                                     self.retryPendingRequests()
                                 case .failure(let error):
-                                    completion(.failure(error))
+                                    q.async {
+                                        completion(.failure(error))
+                                    }
                                     self.failPendingRequests(error)
                                 case .cancel:
                                     let error = Failure.responseError(statusCode, response.allHeaderFields, data)
-                                    completion(.failure(error))
+                                    q.async {
+                                        completion(.failure(error))
+                                    }
                                     self.cancelPendingRequests(error)
                                 }
 
@@ -131,15 +145,19 @@ public class Client {
                     } else {
                         let pendingRequest = PendingRequest(request: request,
                                                             retry: { self.perform(request: request, completion: completion) },
-                                                            fail: { completion(.failure($0)) },
-                                                            cancel: { _ in completion(.failure(.responseError(statusCode, response.allHeaderFields, data))) })
+                                                            fail: { (error) in q.async { completion(.failure(error)) } },
+                                                            cancel: { _ in q.async { completion(.failure(.responseError(statusCode, response.allHeaderFields, data))) } })
                         pendingRequests.append(pendingRequest)
                     }
                 } else {
-                    completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
+                    q.async {
+                        completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
+                    }
                 }
             case 500...599: // Server Error
-                completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
+                q.async {
+                    completion(.failure(.responseError(statusCode, response.allHeaderFields, data)))
+                }
             default:
                 break
             }
