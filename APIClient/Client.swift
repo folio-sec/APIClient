@@ -3,9 +3,7 @@ import Foundation
 public class Client {
     public let baseURL: URL
     public let headers: [AnyHashable: Any]
-
-    public var dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .iso8601
-    public var dataDecodingStrategy: JSONDecoder.DataDecodingStrategy = .base64
+    public let configuration: Configuration
 
     public var authenticator: Authenticating?
     public var interceptors = [Intercepting]()
@@ -17,12 +15,22 @@ public class Client {
     private var pendingRequests = [PendingRequest]()
     private var isRetrying = false
 
-    public init(baseURL: URL, headers: [AnyHashable: Any] = [:]) {
+    private lazy var decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = configuration.dateDecodingStrategy
+        decoder.dataDecodingStrategy = configuration.dataDecodingStrategy
+        return decoder
+    }()
+
+    public init(baseURL: URL, headers: [AnyHashable: Any] = [:], configuration: Configuration = Configuration()) {
         self.baseURL = baseURL
         self.headers = headers
+        self.configuration = configuration
 
         let config = URLSessionConfiguration.ephemeral
         config.httpAdditionalHeaders = headers
+        config.timeoutIntervalForRequest = configuration.timeoutIntervalForRequest
+        config.timeoutIntervalForResource = configuration.timeoutIntervalForResource
 
         session = URLSession(configuration: config)
     }
@@ -131,9 +139,6 @@ public class Client {
     }
 
     private func handleDecodableResponse<ResponseBody>(response: HTTPURLResponse, data: Data, completion: @escaping (Result<Response<ResponseBody>, Failure>) -> Void) where ResponseBody: Decodable {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = dateDecodingStrategy
-        decoder.dataDecodingStrategy = dataDecodingStrategy
         do {
             let responseBody = try decoder.decode(ResponseBody.self, from: data)
             completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: responseBody)))
