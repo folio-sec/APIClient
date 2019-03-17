@@ -24,10 +24,10 @@ public struct Request<ResponseBody> {
             self = .form(raw)
         }
 
-        public init<T: Encodable>(_ raw: T) {
+        public init<T: Encodable>(_ raw: T, dateEncodingStrategy: JSONEncoder.DateEncodingStrategy = .iso8601, dataEncodingStrategy: JSONEncoder.DataEncodingStrategy = .base64) {
             let encoder = JSONEncoder()
-            encoder.dataEncodingStrategy = .base64
-            encoder.dateEncodingStrategy = .iso8601
+            encoder.dateEncodingStrategy = dateEncodingStrategy
+            encoder.dataEncodingStrategy = dataEncodingStrategy
             if let data = try? encoder.encode(raw) {
                 self = .json(data)
             } else {
@@ -46,12 +46,23 @@ public struct Request<ResponseBody> {
             switch parameters {
             case .query(let raw):
                 if var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                    components.queryItems = raw.compactMap {
-                        if let value = $0.value {
-                            return URLQueryItem(name: $0.key, value: "\(value)")
+                    var queryItems = [URLQueryItem]()
+                    for (key, value) in raw {
+                        switch value {
+                        case let values as [Any?]:
+                            queryItems.append(contentsOf: values.compactMap {
+                                if let value = $0 {
+                                    return URLQueryItem(name: key, value: "\(value)")
+                                }
+                                return nil
+                            })
+                        case let value?:
+                            queryItems.append(URLQueryItem(name: key, value: "\(value)"))
+                        default:
+                            break
                         }
-                        return nil
                     }
+                    components.queryItems = queryItems
                     request.url = components.url
                 }
             case .form(let raw):
