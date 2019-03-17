@@ -91,6 +91,14 @@ public class Client {
                 break
             case 200...299: // Success
                 switch ResponseBody.self {
+                case is String.Type:
+                    q.async {
+                        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: (String(data: data, encoding: .utf8) ?? "") as! ResponseBody)))
+                    }
+                case is Void.Type:
+                    q.async {
+                        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: () as! ResponseBody)))
+                    }
                 case let decodableType as Decodable.Type:
                     do {
                         let responseBody = try decodableType.init(decoder: decoder, data: data) as! ResponseBody
@@ -101,10 +109,6 @@ public class Client {
                         q.async {
                             completion(.failure(.decodingError(error, response.statusCode, response.allHeaderFields, data)))
                         }
-                    }
-                case is Void.Type:
-                    q.async {
-                        completion(.success(Response(statusCode: response.statusCode, headers: response.allHeaderFields, body: () as! ResponseBody)))
                     }
                 default:
                     fatalError("unexpected response type: \(ResponseBody.self)")
