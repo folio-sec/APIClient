@@ -1,0 +1,6 @@
+framework module PetstoreAPI {
+  umbrella header "PetstoreAPI-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "PetstoreAPI",
+  "platforms": {
+    "ios": "9.0",
+    "osx": "10.11",
+    "tvos": "9.0"
+  },
+  "version": "0.0.1",
+  "source": {
+    "git": "git@github.com:openapitools/openapi-generator.git",
+    "tag": "v1.0.0"
+  },
+  "authors": "OpenAPI Generator",
+  "license": "Proprietary",
+  "homepage": "https://github.com/folio-sec/APIClient",
+  "summary": "Swagger Petstore",
+  "source_files": [
+    "PetstoreAPI/Classes/**/APIs.swift",
+    "PetstoreAPI/Classes/**/APIs/*.swift",
+    "PetstoreAPI/Classes/**/Models/*.swift"
+  ]
+}

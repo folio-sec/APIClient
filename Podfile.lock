@@ -1,0 +1,16 @@
+PODS:
+  - PetstoreAPI (0.0.1)
+
+DEPENDENCIES:
+  - PetstoreAPI (from `./PetstoreAPI/PetstoreAPI.podspec`)
+
+EXTERNAL SOURCES:
+  PetstoreAPI:
+    :path: "./PetstoreAPI/PetstoreAPI.podspec"
+
+SPEC CHECKSUMS:
+  PetstoreAPI: 436a71e6de2793d36c9144b491188b80dda002ac
+
+PODFILE CHECKSUM: c02f9395831682b5e90b718885e34c98fac8a4fa
+
+COCOAPODS: 1.6.0.beta.1
