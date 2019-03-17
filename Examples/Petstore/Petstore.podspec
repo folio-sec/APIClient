@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name = 'PetstoreAPI'
+  s.name = 'Petstore'
   s.ios.deployment_target = '9.0'
   s.osx.deployment_target = '10.11'
   s.tvos.deployment_target = '9.0'
@@ -9,5 +9,5 @@ Pod::Spec.new do |s|
   s.license = 'Proprietary'
   s.homepage = 'https://github.com/folio-sec/APIClient'
   s.summary = 'Swagger Petstore'
-  s.source_files = ['PetstoreAPI/Classes/**/APIs.swift', 'PetstoreAPI/Classes/**/APIs/*.swift', 'PetstoreAPI/Classes/**/Models/*.swift']
+  s.source_files = ['Petstore/Classes/**/APIs.swift', 'Petstore/Classes/**/APIs/*.swift', 'Petstore/Classes/**/Models/*.swift']
 end

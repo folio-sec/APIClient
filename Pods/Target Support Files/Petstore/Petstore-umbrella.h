@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double PetstoreAPIVersionNumber;
-FOUNDATION_EXPORT const unsigned char PetstoreAPIVersionString[];
+FOUNDATION_EXPORT double PetstoreVersionNumber;
+FOUNDATION_EXPORT const unsigned char PetstoreVersionString[];
 

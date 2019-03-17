@@ -1,6 +1,6 @@
 import XCTest
 import APIClient
-import PetstoreAPI
+import Petstore
 
 class APIClientTests: XCTestCase {
     lazy var client: Client = {

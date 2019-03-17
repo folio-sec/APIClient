@@ -14,7 +14,6 @@ public struct Logger: Intercepting {
         if let response = response as? HTTPURLResponse {
             let path = request.url?.path ?? ""
             print("\(request.httpMethod?.uppercased() ?? "") \(path) \(response.statusCode)")
-            try! data?.write(to: URL(fileURLWithPath: "/Users/katsumi/work/folio-sec/APIClient/json.txt"))
         } else if let error = error {
             print("\(error)")
         }

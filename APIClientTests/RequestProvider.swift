@@ -1,6 +1,6 @@
 import Foundation
 import APIClient
-import PetstoreAPI
+import Petstore
 
 extension RequestProvider {
     func request() -> Request<Response> {
