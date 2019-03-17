@@ -14,8 +14,8 @@ public struct Configuration {
                 timeoutIntervalForRequest: TimeInterval = 60,
                 timeoutIntervalForResource: TimeInterval = 604800,
                 queue: DispatchQueue = DispatchQueue.main) {
-        self.dateDecodingStrategy = .iso8601
-        self.dataDecodingStrategy = .base64
+        self.dateDecodingStrategy = dateDecodingStrategy
+        self.dataDecodingStrategy = dataDecodingStrategy
         self.timeoutIntervalForRequest = timeoutIntervalForRequest
         self.timeoutIntervalForResource = timeoutIntervalForResource
         self.queue = queue
