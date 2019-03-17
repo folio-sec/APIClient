@@ -1,26 +1,219 @@
 import XCTest
-@testable import APIClient
+import APIClient
+import PetstoreAPI
 
 class APIClientTests: XCTestCase {
+    lazy var client: Client = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.calendar = Calendar(identifier: .gregorian)
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+
+        let configuration = Configuration(dateDecodingStrategy: .formatted(dateFormatter))
+        let client = Client(baseURL: URL(string: "https://petstore.swagger.io/v2")!,
+                            configuration: configuration)
+        return client
+    }()
 
     override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
+        super.setUp()
+        client.interceptors = [Logger()]
 
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
+        let ex = expectation(description: "testAddPet")
 
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
+        let category = Category(_id: 1234, name: "eyeColor")
+        let tags = [Tag(_id: 1234, name: "New York"), Tag(_id: 124321, name: "Jose")]
+        let newPet = Pet(_id: 1000, category: category, name: "Fluffy", photoUrls: ["https://petstore.com/sample/photo1.jpg", "https://petstore.com/sample/photo2.jpg"], tags: tags, status: .available)
 
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+        client.perform(request: PetAPI.addPet(pet: newPet).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
         }
+
+        waitForExpectations(timeout: 10)
     }
 
+    func testAddPet() {
+        let ex = expectation(description: "testAddPet")
+
+        let category = Category(_id: 1234, name: "eyeColor")
+        let tags = [Tag(_id: 1234, name: "New York"), Tag(_id: 124321, name: "Jose")]
+        let newPet = Pet(_id: 1000, category: category, name: "Fluffy", photoUrls: ["https://petstore.com/sample/photo1.jpg", "https://petstore.com/sample/photo2.jpg"], tags: tags, status: .available)
+
+        client.perform(request: PetAPI.addPet(pet: newPet).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testUpdatePet() {
+        let ex = expectation(description: "testUpdatePet")
+
+        let category = Category(_id: 1234, name: "eyeColor")
+        let tags = [Tag(_id: 1234, name: "New York"), Tag(_id: 124321, name: "Jose")]
+        let newPet = Pet(_id: 1000, category: category, name: "Fluffy", photoUrls: ["https://petstore.com/sample/photo1.jpg", "https://petstore.com/sample/photo2.jpg"], tags: tags, status: .available)
+
+        client.perform(request: PetAPI.updatePet(pet: newPet).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testGetPetById() {
+        let ex = expectation(description: "testGetPetById")
+
+        self.client.perform(request: PetAPI.getPetById(petId: 1000).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+                let pet = response.body
+                XCTAssertEqual(pet._id, 1000, "invalid id")
+                XCTAssertEqual(pet.name, "Fluffy", "invalid name")
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testUpdatePetWithForm() {
+        let ex = expectation(description: "")
+
+        self.client.perform(request: PetAPI.updatePetWithForm(petId: 1000, name: "Fluffy", status: Pet.Status.available.rawValue).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+        waitForExpectations(timeout: 10)
+    }
+
+    func testDeletePet() {
+        let ex = expectation(description: "testDeletePet")
+
+        client.perform(request: PetAPI.deletePet(petId: 1000).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testGetInventory() {
+        let ex = expectation(description: "")
+
+        client.perform(request: StoreAPI.getInventory().request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testPlaceOrder() {
+        let ex = expectation(description: "testPlaceOrder")
+
+        let shipDate = Date()
+        let order = Order(_id: 1000, petId: 1000, quantity: 10, shipDate: shipDate, status: .placed, complete: true)
+        client.perform(request: StoreAPI.placeOrder(order: order).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+
+                XCTAssert(response.body._id == 1000, "invalid id")
+                XCTAssert(response.body.quantity == 10, "invalid quantity")
+                XCTAssert(response.body.status == .placed, "invalid status")
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testGetOrderById() {
+        let ex = expectation(description: "testGetOrderById")
+
+        client.perform(request: StoreAPI.getOrderById(orderId: 1000).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+
+                XCTAssert(response.body._id == 1000, "invalid id")
+                XCTAssert(response.body.quantity == 10, "invalid quantity")
+                XCTAssert(response.body.status == .placed, "invalid status")
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testLoginUser() {
+        let ex = expectation(description: "testLoginUser")
+
+        client.perform(request: UserAPI.loginUser(username: "swiftTester", password: "swift").request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testLogoutUser() {
+        let ex = expectation(description: "testLogoutUser")
+
+        client.perform(request: UserAPI.logoutUser().request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
 }
