@@ -1,0 +1,7 @@
+public enum {{classname}}: {{dataType}}, Codable, Hashable {
+{{#allowableValues}}
+{{#enumVars}}
+    case {{name}} = {{{value}}}
+{{/enumVars}}
+{{/allowableValues}}
+}
