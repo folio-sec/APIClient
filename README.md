@@ -105,3 +105,20 @@ client.perform(request: PetAPI.getPetById(petId: 1000).request()) {
     }
 }
 ```
+
+## Installation ##
+
+### [Carthage] ###
+
+[Carthage]: https://github.com/Carthage/Carthage
+
+```
+github "folio-sec/APIClient"
+```
+
+Then run `carthage update`.
+
+Follow the current instructions in [Carthage's README][carthage-installation]
+for up to date installation instructions.
+
+[carthage-installation]: https://github.com/Carthage/Carthage#adding-frameworks-to-an-application
