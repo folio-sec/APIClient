@@ -61,7 +61,7 @@ open class PetAPI {
 
 ## Usage
 
-Add extension to convert OpenAPI's `RequestProvider<Response>` to APIClient's `Request<Response>`.
+Add an extension to convert OpenAPI's `RequestProvider<Response>` to APIClient's `Request<Response>`.
 
 ```swift
 import Foundation
