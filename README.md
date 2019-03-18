@@ -160,11 +160,16 @@ public struct Logger: Intercepting {
 }
 ```
 
+```swift
+client.interceptors = [Logger()]
+...
+```
+
 ### Authenticator
 
 The Authenticator has an opportunity to retry when it receives a 401 response. It will be used to seamlessly refresh access tokens.
 
-```
+```swift
 import Foundation
 import APIClient
 
@@ -232,4 +237,11 @@ struct Authenticator: Intercepting, Authenticating {
         return request
     }
 }
+```
+
+```swift
+let authenticator = Authenticator(credentials: credentials)
+client.authenticator = authenticator
+client.interceptors = [authenticator] + client.interceptors // for signing all requests
+...
 ```
