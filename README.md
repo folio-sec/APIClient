@@ -56,10 +56,10 @@ open class PetAPI {
     ...
 ```
 
-`RequestProvider<Response>` just encodes an endpoint (path), parameters (query, form or JSON), a HTTP method and a response type.
+`RequestProvider<Response>` just encodes an endpoint (path), parameters (query, form or JSON), an HTTP method and a response type.
 
 
-### Usage
+## Usage
 
 Add extension to convert OpenAPI's `RequestProvider<Response>` to APIClient's `Request<Response>`.
 
@@ -122,3 +122,114 @@ Follow the current instructions in [Carthage's README][carthage-installation]
 for up to date installation instructions.
 
 [carthage-installation]: https://github.com/Carthage/Carthage#adding-frameworks-to-an-application
+
+## Advanced
+
+### Interceptor
+
+APIClient supports request and response interceptors.
+
+The following example is a logger interceptor.
+
+```swift
+import Foundation
+import APIClient
+
+public struct Logger: Intercepting {
+    public init() {}
+
+    public func intercept(client: Client, request: URLRequest) -> URLRequest {
+        print("\(requestToCurl(client: client, request: request))")
+        return request
+    }
+
+    // swiftlint:disable large_tuple
+    public func intercept(client: Client, request: URLRequest, response: URLResponse?, data: Data?, error: Error?) -> (URLResponse?, Data?, Error?) {
+        if let response = response as? HTTPURLResponse {
+            let path = request.url?.path ?? ""
+            print("\(request.httpMethod?.uppercased() ?? "") \(path) \(response.statusCode)")
+        } else if let error = error {
+            print("\(error)")
+        }
+        return (response, data, error)
+    }
+
+    private func requestToCurl(client: Client, request: URLRequest) -> String {
+        ...
+    }
+}
+```
+
+### Authenticator
+
+The Authenticator has an opportunity to retry when it receives a 401 response. It will be used to seamlessly refresh access tokens.
+
+```
+import Foundation
+import APIClient
+
+struct Authenticator: Intercepting, Authenticating {
+    private let credentials: Credentials
+
+    init(credentials: Credentials) {
+        self.credentials = credentials
+    }
+
+    func intercept(client: Client, request: URLRequest) -> URLRequest {
+        return sign(request: request)
+    }
+
+    func authenticate(client: Client, request: URLRequest, response: HTTPURLResponse, data: Data?, completion: @escaping (AuthenticationResult) -> Void) {
+        switch response.statusCode {
+        case 401:
+            if let url = request.url, !url.path.hasSuffix("/login"), let refreshToken = credentials.fetch()?.refreshToken {
+                client.perform(request: AuthenticationAPI.authorize(refreshToken: refreshToken).request()) {
+                    switch $0 {
+                    case .success(let response):
+                        let body = response.body
+                        self.credentials.update(token: Token(accessToken: body.accessToken, refreshToken: body.refreshToken, expiry: Date().addingTimeInterval(TimeInterval(body.expiresIn))))
+                        completion(.success(self.sign(request: request)))
+                        return
+                    case .failure(let error):
+                        switch error {
+                        case .networkError, .decodingError:
+                            completion(.failure(error))
+                            return
+                        case .responseError(let code, _, _):
+                            switch code {
+                            case 400...499:
+                                self.credentials.update(token: nil)
+                                completion(.failure(error))
+                                return
+                            case 500...499:
+                                completion(.failure(error))
+                                return
+                            default:
+                                break
+                            }
+                        }
+                        completion(.failure(error))
+                        return
+                    }
+                }
+            } else {
+                completion(.cancel)
+                return
+            }
+        default:
+            completion(.cancel)
+            return
+        }
+    }
+
+    private func sign(request: URLRequest) -> URLRequest {
+        var request = request
+        if let url = request.url, !url.path.hasSuffix("/login") {
+            if let accessToken = credentials.fetch()?.accessToken {
+                request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            }
+        }
+        return request
+    }
+}
+```
