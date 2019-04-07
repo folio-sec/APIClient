@@ -1,0 +1,28 @@
+APPLICATION_EXTENSION_API_ONLY = YES
+CLANG_ENABLE_MODULES = YES
+CODE_SIGN_IDENTITY =
+CODE_SIGN_STYLE = Automatic
+DEFINES_MODULE = YES
+DEVELOPMENT_TEAM = 27AEDK3C9F
+DYLIB_COMPATIBILITY_VERSION = 1
+DYLIB_CURRENT_VERSION = 1
+DYLIB_INSTALL_NAME_BASE = @rpath
+INFOPLIST_FILE = APIClient/Info.plist
+INSTALL_PATH = $(LOCAL_LIBRARY_DIR)/Frameworks
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
+PRODUCT_BUNDLE_IDENTIFIER = com.folio-sec.APIClient
+PRODUCT_NAME = $(TARGET_NAME:c99extidentifier)
+SKIP_INSTALL = YES
+SWIFT_VERSION = 5.0
+
+SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator watchos watchsimulator appletvos appletvsimulator;
+TARGETED_DEVICE_FAMILY = 1,2,3,4;
+
+ENABLE_BITCODE[sdk=iphone*] = YES;
+ENABLE_BITCODE[sdk=watch*] = YES;
+ENABLE_BITCODE[sdk=appletv*] = YES;
+
+LD_RUNPATH_SEARCH_PATHS[sdk=iphone*] = $(inherited) @executable_path/Frameworks @loader_path/Frameworks;
+LD_RUNPATH_SEARCH_PATHS[sdk=watch*] = $(inherited) @executable_path/Frameworks @loader_path/Frameworks;
+LD_RUNPATH_SEARCH_PATHS[sdk=appletv*] = $(inherited) @executable_path/Frameworks @loader_path/Frameworks;
+LD_RUNPATH_SEARCH_PATHS[sdk=macosx*] = $(inherited) @executable_path/../Frameworks @loader_path/../Frameworks;
