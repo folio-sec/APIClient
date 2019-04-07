@@ -248,6 +248,8 @@ private class TaskExecutor {
                 break
             case .completed:
                 runningTasks[runningTask.key] = nil
+            @unknown default:
+                break
             }
         }
         while tasks.count > 0 && runningTasks.count <= maxConcurrentTasks {

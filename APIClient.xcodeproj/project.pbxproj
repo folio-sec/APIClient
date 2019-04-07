@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -17,7 +17,6 @@
 		14DDC1B221F4B735006E01E8 /* Interceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DDC1B121F4B735006E01E8 /* Interceptor.swift */; };
 		14DDC1B421F4B769006E01E8 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DDC1B321F4B769006E01E8 /* Request.swift */; };
 		14DDC1B621F4B795006E01E8 /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DDC1B521F4B795006E01E8 /* Response.swift */; };
-		14DDC1B821F4B7B3006E01E8 /* Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DDC1B721F4B7B3006E01E8 /* Result.swift */; };
 		14E0CC8F2236C607004B1407 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E0CC8E2236C607004B1407 /* Configuration.swift */; };
 		54849B4974998EC222D926EE /* Pods_APIClientTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6C213BABCC3B2BE09FFECFD /* Pods_APIClientTests.framework */; };
 		CE965D3592AC24A00FCD3DB9 /* Pods_APIClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDE650F9478F1706A1049F6D /* Pods_APIClient.framework */; };
@@ -47,7 +46,6 @@
 		14DDC1B121F4B735006E01E8 /* Interceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interceptor.swift; sourceTree = "<group>"; };
 		14DDC1B321F4B769006E01E8 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		14DDC1B521F4B795006E01E8 /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
-		14DDC1B721F4B7B3006E01E8 /* Result.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
 		14E0CC8E2236C607004B1407 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		302E53B0AF86FC2C69D769FE /* Pods-APIClientTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-APIClientTests.debug.xcconfig"; path = "Target Support Files/Pods-APIClientTests/Pods-APIClientTests.debug.xcconfig"; sourceTree = "<group>"; };
 		6A9D066F7BC17CEE256AA3D8 /* Pods-APIClient.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-APIClient.release.xcconfig"; path = "Target Support Files/Pods-APIClient/Pods-APIClient.release.xcconfig"; sourceTree = "<group>"; };
@@ -108,7 +106,6 @@
 				14847E5F2212054200478D45 /* Authenticator.swift */,
 				14DDC1B321F4B769006E01E8 /* Request.swift */,
 				14DDC1B521F4B795006E01E8 /* Response.swift */,
-				14DDC1B721F4B7B3006E01E8 /* Result.swift */,
 				14DDC19921F4B5DD006E01E8 /* Info.plist */,
 			);
 			path = APIClient;
@@ -210,10 +207,11 @@
 				TargetAttributes = {
 					14DDC19421F4B5DD006E01E8 = {
 						CreatedOnToolsVersion = 10.1;
-						LastSwiftMigration = 1010;
+						LastSwiftMigration = 1020;
 					};
 					14DDC19D21F4B5DD006E01E8 = {
 						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1020;
 					};
 				};
 			};
@@ -223,6 +221,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 14DDC18B21F4B5DD006E01E8;
 			productRefGroup = 14DDC19621F4B5DD006E01E8 /* Products */;
@@ -322,7 +321,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				14DDC1B621F4B795006E01E8 /* Response.swift in Sources */,
-				14DDC1B821F4B7B3006E01E8 /* Result.swift in Sources */,
 				14E0CC8F2236C607004B1407 /* Configuration.swift in Sources */,
 				14DDC1B021F4B711006E01E8 /* Client.swift in Sources */,
 				14DDC1B421F4B769006E01E8 /* Request.swift in Sources */,
@@ -499,7 +497,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -528,7 +526,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.folio-sec.APIClient";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -547,7 +545,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.folio-sec.APIClientTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -566,7 +564,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.folio-sec.APIClientTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
