@@ -116,7 +116,7 @@ public class Client {
             case 300...399: // Redirection
                 break
             case 400...499: // Client Error
-                if let authenticator = self.authenticator {
+                if let authenticator = self.authenticator, authenticator.shouldRetry(client: self, request: request, response: response, data: data) {
                     if !isRetrying {
                         isRetrying = true
 
