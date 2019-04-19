@@ -69,7 +69,7 @@ public struct Request<ResponseBody> {
                 var components = URLComponents()
                 components.queryItems = raw.compactMap {
                     if let value = $0.value {
-                        return URLQueryItem(name: $0.key, value: value)
+                        return URLQueryItem(name: $0.key, value: value.addingPercentEncoding(withAllowedCharacters: .alphanumerics))
                     }
                     return nil
                 }
