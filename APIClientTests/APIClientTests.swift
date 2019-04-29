@@ -37,6 +37,62 @@ class APIClientTests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
 
+    func testQueryParameter1() {
+        struct Interceptor: Intercepting {
+            func intercept(client: Client, request: URLRequest) -> URLRequest {
+                XCTAssertEqual(request.url?.query, "tags=kishikawakatsumi+test@gmail.com")
+                return request
+            }
+        }
+        
+        client.interceptors = client.interceptors + [Interceptor()]
+
+        let ex = expectation(description: "testQueryParameter1")
+        client.perform(request: PetAPI.findPetsByTags(tags: ["kishikawakatsumi+test@gmail.com"]).request()) { _ in
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testQueryParameter2() {
+        struct Interceptor: Intercepting {
+            func intercept(client: Client, request: URLRequest) -> URLRequest {
+                XCTAssertEqual(request.url?.query?.removingPercentEncoding, "tags=a b+c")
+                return request
+            }
+        }
+
+        client.interceptors = client.interceptors + [Interceptor()]
+
+        let ex = expectation(description: "testQueryParameter2")
+        client.perform(request: PetAPI.findPetsByTags(tags: ["a b+c"]).request()) { _ in
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
+    func testFormParameter1() {
+        struct Interceptor: Intercepting {
+            func intercept(client: Client, request: URLRequest) -> URLRequest {
+                if let httpBody = request.httpBody {
+                    XCTAssertEqual(String(data: httpBody, encoding: .utf8)?.removingPercentEncoding, "name=kishikawakatsumi+test@gmail.com")
+                }
+                return request
+            }
+        }
+
+        client.interceptors = client.interceptors + [Interceptor()]
+
+        let ex = expectation(description: "testFormParameter1")
+        client.perform(request: PetAPI.updatePetWithForm(petId: 0, name: "kishikawakatsumi+test@gmail.com", status: nil).request()) { _ in
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+    }
+
     func testAddPet() {
         let ex = expectation(description: "testAddPet")
 
@@ -166,7 +222,27 @@ class APIClientTests: XCTestCase {
     }
 
     func testGetOrderById() {
-        let ex = expectation(description: "testGetOrderById")
+        var ex = expectation(description: "testPlaceOrder")
+
+        let shipDate = Date()
+        let order = Order(_id: 1000, petId: 1000, quantity: 10, shipDate: shipDate, status: .placed, complete: true)
+        client.perform(request: StoreAPI.placeOrder(order: order).request()) {
+            switch $0 {
+            case .success(let response):
+                XCTAssertEqual(response.statusCode, 200)
+
+                XCTAssert(response.body._id == 1000, "invalid id")
+                XCTAssert(response.body.quantity == 10, "invalid quantity")
+                XCTAssert(response.body.status == .placed, "invalid status")
+            case .failure(let error):
+                XCTFail("request failed: \(error)")
+            }
+            ex.fulfill()
+        }
+
+        waitForExpectations(timeout: 10)
+
+        ex = expectation(description: "testGetOrderById")
 
         client.perform(request: StoreAPI.getOrderById(orderId: 1000).request()) {
             switch $0 {
