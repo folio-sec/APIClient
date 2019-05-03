@@ -199,7 +199,7 @@ public class Client {
     }
 
     private func authenticate(authenticator: Authenticating, request: URLRequest, response: HTTPURLResponse, data: Data?, completion: @escaping (AuthenticationResult) -> Void) {
-        let client = Client(baseURL: baseURL, headers: headers)
+        let client = Client(baseURL: baseURL, headers: headers, configuration: configuration)
         client.interceptors = interceptors
         authenticator.authenticate(client: client, request: request, response: response, data: data) {
             completion($0)
