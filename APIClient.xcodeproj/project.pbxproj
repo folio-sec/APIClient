@@ -93,12 +93,30 @@
 			path = Configurations;
 			sourceTree = "<group>";
 		};
-		14DDC18B21F4B5DD006E01E8 = {
+		14509D06239FB8B600AB69C0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
 				14DDC19721F4B5DD006E01E8 /* APIClient */,
-				14153248225A2A8B00C74C18 /* Configurations */,
+				14DDC19921F4B5DD006E01E8 /* Info.plist */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		14509D07239FB8D200AB69C0 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
 				14DDC1A221F4B5DD006E01E8 /* APIClientTests */,
+				14DDC1A521F4B5DD006E01E8 /* Info.plist */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		14DDC18B21F4B5DD006E01E8 = {
+			isa = PBXGroup;
+			children = (
+				14509D06239FB8B600AB69C0 /* Sources */,
+				14509D07239FB8D200AB69C0 /* Tests */,
+				14153248225A2A8B00C74C18 /* Configurations */,
 				14DDC19621F4B5DD006E01E8 /* Products */,
 				55041E2D4F9F37E8E5658B10 /* Pods */,
 				6F4C15C00721136277021A84 /* Frameworks */,
@@ -124,7 +142,6 @@
 				14847E5F2212054200478D45 /* Authenticator.swift */,
 				14DDC1B321F4B769006E01E8 /* Request.swift */,
 				14DDC1B521F4B795006E01E8 /* Response.swift */,
-				14DDC19921F4B5DD006E01E8 /* Info.plist */,
 			);
 			path = APIClient;
 			sourceTree = "<group>";
@@ -135,7 +152,6 @@
 				14DDC1A321F4B5DD006E01E8 /* APIClientTests.swift */,
 				1463BA8F223E23F800570758 /* RequestProvider.swift */,
 				1463BA93223E262C00570758 /* Logger.swift */,
-				14DDC1A521F4B5DD006E01E8 /* Info.plist */,
 			);
 			path = APIClientTests;
 			sourceTree = "<group>";
@@ -379,7 +395,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27AEDK3C9F;
-				INFOPLIST_FILE = APIClientTests/Info.plist;
+				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -400,7 +416,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 27AEDK3C9F;
-				INFOPLIST_FILE = APIClientTests/Info.plist;
+				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
