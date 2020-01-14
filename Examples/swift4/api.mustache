@@ -48,9 +48,9 @@ open class {{classname}} {
         {{/bodyParam}}
         {{^bodyParam}}
             {{#hasFormParams}}
-        let parameters: [String: String?] = [
+        let parameters: [String: {{#isMultipart}}Any?{{/isMultipart}}{{^isMultipart}}String?{{/isMultipart}}] = [
                 {{#formParams}}
-            "{{baseName}}": {{paramName}}{{^required}}?{{/required}}.description{{#hasMore}},{{/hasMore}}
+            "{{baseName}}": {{paramName}}{{^required}}?{{/required}}{{^isMultipart}}.description{{/isMultipart}}{{#hasMore}},{{/hasMore}}
                 {{/formParams}}
         ]
             {{/hasFormParams}}
@@ -60,7 +60,7 @@ open class {{classname}} {
             "{{baseName}}": {{paramName}}{{#hasMore}}, {{/hasMore}}
             {{/queryParams}}
         ]{{/hasQueryParams}}
-        return RequestProvider<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>(endpoint: path, method: "{{httpMethod}}"{{#bodyParam}}, parameters: RequestProvider.Parameters(parameters){{/bodyParam}}{{^bodyParam}}{{#hasFormParams}}, parameters: RequestProvider.Parameters(parameters){{/hasFormParams}}{{/bodyParam}}{{#hasQueryParams}}, parameters: RequestProvider.Parameters(parameters){{/hasQueryParams}})
+        return RequestProvider<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>(endpoint: path, method: "{{httpMethod}}"{{#bodyParam}}, parameters: RequestProvider.Parameters(parameters){{/bodyParam}}{{^bodyParam}}{{#hasFormParams}}, parameters: {{#isMultipart}}RequestProvider.Parameters.multipart(parameters){{/isMultipart}}{{^isMultipart}}RequestProvider.Parameters(parameters){{/isMultipart}}{{/hasFormParams}}{{/bodyParam}}{{#hasQueryParams}}, parameters: RequestProvider.Parameters(parameters){{/hasQueryParams}})
     }
 
 {{/operation}}

@@ -22,6 +22,7 @@ public struct RequestProvider<Response> {
     public enum Parameters {
         case query([String: Any?])
         case form([String: String?])
+        case multipart([String: Any?])
         case json(AnyEncodable)
 
         public init(_ raw: [String: Any?]) {
