@@ -14,6 +14,7 @@ public struct Request<ResponseBody> {
     public enum Parameters {
         case query([String: Any?])
         case form([String: String?])
+        case multipart([String: Any?])
         case json(Data?)
 
         public init(_ raw: [String: Any?]) {
@@ -52,17 +53,21 @@ public struct Request<ResponseBody> {
                         case let values as [Any?]:
                             queryItems.append(contentsOf: values.compactMap {
                                 if let value = $0 {
-                                    return URLQueryItem(name: key, value: "\(value)")
+                                    return URLQueryItem(name: key, value: "\(value)".addingPercentEncoding(withAllowedCharacters: .alphanumerics))
                                 }
                                 return nil
                             })
                         case let value?:
-                            queryItems.append(URLQueryItem(name: key, value: "\(value)"))
+                            queryItems.append(URLQueryItem(name: key, value: "\(value)".addingPercentEncoding(withAllowedCharacters: .alphanumerics)))
                         default:
                             break
                         }
                     }
-                    components.queryItems = queryItems
+                    if #available(iOS 11.0, *) {
+                        components.percentEncodedQueryItems = queryItems
+                    } else {
+                        components.queryItems = queryItems
+                    }
                     request.url = components.url
                 }
             case .form(let raw):
@@ -78,6 +83,20 @@ public struct Request<ResponseBody> {
                     request.addValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
                     request.httpBody = query.data(using: .utf8)
                 }
+            case .multipart(let raw):
+                let boundaryIdentifier = UUID().uuidString
+
+                let boundary = "--\(boundaryIdentifier)\r\n".data(using: .utf8)!
+                var body = Data()
+
+                for multipartFormData in raw.compactMap({ data in data.value.map { MultipartFormData(name: data.key, data: $0) } }) {
+                    body.append(boundary)
+                    body.append(multipartFormData.encode())
+                }
+                body.append(boundary + "--\r\n".data(using: .utf8)!)
+
+                request.addValue("multipart/form-data; boundary=\(boundaryIdentifier)", forHTTPHeaderField: "Content-Type")
+                request.httpBody = body
             case .json(let data):
                 request.addValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
                 request.httpBody = data
@@ -85,5 +104,44 @@ public struct Request<ResponseBody> {
         }
 
         return request
+    }
+
+    struct MultipartFormData {
+        let name: String
+        let data: Any
+
+        func encode() -> Data {
+            var encoded = Data()
+
+            encoded.append(#"Content-Disposition:form-data; name="\#(name)""#.data(using: .utf8)!)
+            if let url = data as? URL {
+                encoded.append(#"; filename="\#(url.lastPathComponent)""#.data(using: .utf8)!)
+            }
+            encoded.append("\r\n".data(using: .utf8)!)
+
+            let body = encodeBody()
+            encoded.append("Content-Length: \(body.count)\r\n\r\n".data(using: .utf8)!)
+
+            encoded.append(body)
+            encoded.append("\r\n".data(using: .utf8)!)
+            return encoded
+        }
+
+        func encodeBody() -> Data {
+            switch data {
+            case let string as String:
+                if let body = string.data(using: .utf8) {
+                    return body
+                }
+            case let url as URL:
+                if let body = try? Data(contentsOf: url) {
+                    return body
+                }
+            default:
+                break
+            }
+
+            return Data()
+        }
     }
 }
