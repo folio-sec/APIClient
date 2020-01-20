@@ -93,7 +93,7 @@ public struct Request<ResponseBody> {
                     body.append(boundary)
                     body.append(multipartFormData.encode())
                 }
-                body.append(boundary + "--\r\n".data(using: .utf8)!)
+                body.append("--\(boundaryIdentifier)--\r\n".data(using: .utf8)!)
 
                 request.addValue("multipart/form-data; boundary=\(boundaryIdentifier)", forHTTPHeaderField: "Content-Type")
                 request.httpBody = body
@@ -113,7 +113,7 @@ public struct Request<ResponseBody> {
         func encode() -> Data {
             var encoded = Data()
 
-            encoded.append(#"Content-Disposition:form-data; name="\#(name)""#.data(using: .utf8)!)
+            encoded.append(#"Content-Disposition: form-data; name="\#(name)""#.data(using: .utf8)!)
             if let url = data as? URL {
                 encoded.append(#"; filename="\#(url.lastPathComponent)""#.data(using: .utf8)!)
             }
