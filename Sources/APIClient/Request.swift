@@ -129,6 +129,10 @@ public struct Request<ResponseBody> {
 
         func encodeBody() -> Data {
             switch data {
+            case let number as Int:
+                if let body = "\(number)".data(using: .utf8) {
+                    return body
+                }
             case let string as String:
                 if let body = string.data(using: .utf8) {
                     return body
@@ -137,8 +141,12 @@ public struct Request<ResponseBody> {
                 if let body = try? Data(contentsOf: url) {
                     return body
                 }
+            case let data as Data:
+                return data
             default:
-                break
+                if let body = "\(data)".data(using: .utf8) {
+                    return body
+                }
             }
 
             return Data()
