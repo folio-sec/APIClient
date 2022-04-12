@@ -40,7 +40,7 @@ class APIClientTests: XCTestCase {
     func testQueryParameter1() {
         struct Interceptor: Intercepting {
             func intercept(client: Client, request: URLRequest) -> URLRequest {
-                XCTAssertEqual(request.url?.query, "tags=kishikawakatsumi+test@gmail.com")
+                XCTAssertEqual(request.url?.query?.removingPercentEncoding, "tags=kishikawakatsumi+test@gmail.com")
                 return request
             }
         }
